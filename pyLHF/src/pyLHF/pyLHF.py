@@ -1,22 +1,35 @@
-from LHF import LHF
-from LHF import pipePackett
 import sys
-#from LHF import bettiBoundaryTableEntry 
+sys.path.append('../')
 import tadasets
+import persim
+import numpy as np
 
-#Load data from file/generate data
-data = tadasets.dsphere(n=100, d=3, r=1, noise=0.1)
+from LHF import LHF
+from LHF.OutputAnalysis import persistenceDiagram, heatmap, barcodeDiagram, bettiCurve
+
+
+
 
 #Initialize the LHF Library  
-pyLHF = LHF(data)
+pyLHF = LHF.LHF()
 
 #Set debug mode to true, configure other arguments (optional)
-pyLHF.args["debug"] = "1"
-pyLHF.args["dimensions"] = "3"
+pyLHF.args["debug"] = "0"
+pyLHF.args["epsilon"]= 1.0
 
-#Call a test function to ensure the library is properly loaded
-# pyLHF.testFunc(1, "HELLO")
+pis = []
+
+for i in range(0, 10):
+	
+	#Load data from file/generate data
+	data = tadasets.dsphere(n=100+(i*15), d=3, r=1, noise=0.1)
+
+	pis = pyLHF.runPH(data)
+
+	print(len(pis))
 
 
-testrun = pyLHF.runPH3(sys.argv)
- 
+
+plt = persistenceDiagram(pis, show=True)
+
+

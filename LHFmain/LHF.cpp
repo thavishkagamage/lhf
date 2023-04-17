@@ -1,3 +1,8 @@
+/*
+@file LHF.hpp
+@brief Definition of LHF class, which runs the pipeline and outputs betti numbers.
+
+*/
 #include "mpi.h"
 #include "LHF.hpp"
 #include "omp.h"
@@ -7,6 +12,17 @@
 #include <typeinfo>
 #include <thread>
 #include <string>
+
+/*
+@brief Output betti numbers to a file or the console using the writeOutput library.
+
+@tparam nodeType The type of node in the data set.
+
+@param args A map containing the arguments for the pipeline.
+
+@param wD A pipePacket containing the output of the pipeline.
+
+*/
 
 template<typename nodeType>
 void LHF<nodeType>::outputBettis(std::map<std::string, std::string> args, pipePacket<nodeType> &wD){
@@ -37,6 +53,22 @@ void LHF<nodeType>::outputBettis(std::map<std::string, std::string> args, pipePa
 	}
 }
 
+/**
+@brief Runs the pipeline with the specified arguments and data packet.
+
+The pipeline consists of a sequence of components connected by pipes
+
+that process the data packet in a specific order.
+
+The pipeline function names are separated by dots and passed as an argument.
+
+@tparam nodeType The data type of the nodes in the pipeline.
+
+@param args A map of arguments to configure the pipeline components.
+
+@param wD The input and output data packet for the pipeline.
+
+*/
 template<typename nodeType>
 void LHF<nodeType>::runPipeline(std::map<std::string, std::string> args, pipePacket<nodeType>&wD){
 	// Begin processing parts of the pipeline
@@ -95,6 +127,15 @@ void LHF<nodeType>::runPipeline(std::map<std::string, std::string> args, pipePac
 	outputBettis(args, wD);
 }
 
+/*
+@brief Runs the preprocessor function, if enabled.
+
+@tparam nodeType The type of node being processed.
+
+@param args The arguments to be used for preprocessor configuration.
+
+@param wD The pipeline packet to process.
+*/
 template<typename nodeType>
 void LHF<nodeType>::runPreprocessor(std::map<std::string, std::string>& args, pipePacket<nodeType>&wD){
 	//Start with the preprocessing function, if enabled
@@ -118,7 +159,23 @@ void LHF<nodeType>::runPreprocessor(std::map<std::string, std::string>& args, pi
 		}
 	}
 }
+/*
+@brief Processes partitions in parallel and returns a merged betti table
 
+@tparam nodeType The node type for the pipeline
+
+@param args A map of arguments for pipeline configuration
+
+@param centroidLabels The centroid labels for each point in the data
+
+@param partitionedData A pair containing partition labels and partitioned data
+
+@param inputData The input data
+
+@param displacement The displacement of the first partition in the full dataset
+
+@return std::vector<bettiBoundaryTableEntry> The merged betti table for all partitions
+*/
 template<typename nodeType>
 std::vector<bettiBoundaryTableEntry> LHF<nodeType>::processParallel(std::map<std::string, std::string> args, std::vector<unsigned> &centroidLabels, std::pair<std::vector<std::vector<unsigned>>, std::vector<std::vector<std::vector<double>>>> &partitionedData, std::vector<std::vector<double>> &inputData, int displacement){
 	//		Parameters
@@ -755,6 +812,14 @@ std::vector<bettiBoundaryTableEntry> LHF<nodeType>::processDistributedWrapper(st
 
 
 extern "C"{
+	
+	void freeWrapper(PRAP *ptr){
+		
+		std::cout << "Freeing address: " << ptr << std::endl;
+		free(ptr);
+		return;
+	}
+	
 
 	void pyRunWrapper(const int argc, char *argv, const double *pointCloud){
 
@@ -841,25 +906,41 @@ extern "C"{
 		return;
 	}
 
-	PRAP *pyRunWrapper2(int argc, char *argv[], const double *pointCloud){
+	PRAP *pyRunWrapper2(int argc, char *argv, const double *pointCloud){
 
-		auto args = argParser::parse(argc, argv);
+		//std::cout << std::endl << "argc: " << argc << std::endl;
+		//First we need to convert arguments from char* to map
+		std::map<std::string, std::string> args;
+		std::vector<std::string> rawArgs;
 
+		//Split arguments into list
+		std::string tempstr = "";
+		for (auto i = 0; i < argc; i++){
+			//Check for space (32)
+			if (argv[i] == 32){
+				rawArgs.push_back(tempstr);
+				tempstr = "";
+			}
+			else
+				tempstr += argv[i];
+		}
 
-		// int dataSize = std::atoi(args["datasize"].c_str());
-		// int dataDim = std::atoi(args["datadim"].c_str());
+		//Split argument list into map
+		for (auto i = 0; i < rawArgs.size(); i += 2){
+			args[rawArgs[i]] = rawArgs[i + 1];
+		}
 
-		// std::vector<std::vector<double>> data(dataSize, std::vector<double>(dataDim));
+		//Next, decode the data
+		int dataSize = std::atoi(args["datasize"].c_str());
+		int dataDim = std::atoi(args["datadim"].c_str());
 
-		// for (auto row = 0; row < dataSize; row++)
-		// {
+		std::vector<std::vector<double>> data(dataSize, std::vector<double>(dataDim));
 
-		// 	for (auto dim = 0; dim < dataDim; dim++)
-		// 	{
-
-		// 		data[row][dim] = pointCloud[row * dim + dim];
-		// 	}
-		// }
+		for (auto row = 0; row < dataSize; row++){
+			for (auto dim = 0; dim < dataDim; dim++){
+				data[row][dim] = pointCloud[row*dataDim + dim];
+			}
+		}
 
 		//C interface for python to call into LHF
 		auto lhflib = LHF<simplexNode>();
@@ -868,14 +949,15 @@ extern "C"{
 		//Create a pipePacket<simplexNode>(datatype) to store the complex and pass between engines
 		auto wD = pipePacket<simplexNode>(args, args["complexType"]); //wD (workingData)
 
-		// wD.inputData = data;
-		// wD.workData = wD.inputData;
-		auto rs = readInput();
-		if(args["pipeline"] != "slidingwindow" && args["pipeline"] != "naivewindow" && args["mode"] != "mpi"){
+		wD.inputData = data;
+		wD.workData = wD.inputData;
+		
+		//auto rs = readInput();
+		//if(args["pipeline"] != "slidingwindow" && args["pipeline"] != "naivewindow" && args["mode"] != "mpi"){
 			//Read data from inputFile CSV
-			wD.inputData = rs.readCSV(args["inputFile"]);
-			wD.workData = wD.inputData;
-		}
+		//	wD.inputData = rs.readCSV(args["inputFile"]);
+		//	wD.workData = wD.inputData;
+		//}
 
 
 		//Determine what pipe we will be running
