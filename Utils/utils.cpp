@@ -171,6 +171,13 @@ double  utils :: getAverage(std::vector<double> &v) {
     return std::accumulate(v.begin(), v.end(), 0.0) / v.size();
 }
 
+/**
+ * @brief Transposes the input matrix and adjusts the mean of each row
+ * 
+ * @param input 2D vector representing the input matrix
+ * @return std::vector<std::vector<double>> Transposed matrix with mean adjusted rows
+ */
+
 std::vector<std::vector<double>> utils ::  transposeMeanAdjusted(std::vector<std::vector<double>> input){
     std::vector<std::vector<double>> inputtranspose;
     std::vector<std::vector<double>> inputstd;
@@ -195,6 +202,13 @@ std::vector<std::vector<double>> utils ::  transposeMeanAdjusted(std::vector<std
 	return inputstd;
 }
 
+/**
+ * @brief Calculates the covariance matrix of the input matrix
+ * 
+ * @param input 2D vector representing the input matrix
+ * @return Eigen::MatrixXd Covariance matrix of the input
+ */
+
 Eigen::MatrixXd utils ::  covariance(std::vector<std::vector<double>> input){
 	Eigen::MatrixXd result(input.size(),input.size());
 	int i=0,j=0;
@@ -215,6 +229,13 @@ Eigen::MatrixXd utils ::  covariance(std::vector<std::vector<double>> input){
 	return result;
 }
 	
+/**
+ * @brief Calculates the determinant of a square matrix using Gaussian elimination
+ * 
+ * @param mat 2D vector representing the input matrix
+ * @param n Size of the square matrix (number of rows or columns)
+ * @return double The determinant of the input matrix
+ */
 
 double utils :: determinantOfMatrix(std::vector<std::vector<double>> mat, int n)
 {
@@ -257,6 +278,13 @@ double utils :: determinantOfMatrix(std::vector<std::vector<double>> mat, int n)
 	return (det);
 }
 
+/**
+ * @brief Transposes the input matrix
+ * 
+ * @param input 2D vector representing the input matrix
+ * @return std::vector<std::vector<double>> Transposed matrix
+ */
+
 std::vector<std::vector<double>> utils ::  transpose(std::vector<std::vector<double>> input){
     std::vector<std::vector<double>> inputtranspose;
     
@@ -270,6 +298,13 @@ std::vector<std::vector<double>> utils ::  transpose(std::vector<std::vector<dou
 	return inputtranspose;
 }
 
+/**
+ * @brief Multiplies two matrices (matA and matB) and returns the result
+ * 
+ * @param matA 2D vector representing the first input matrix
+ * @param matB 2D vector representing the second input matrix
+ * @return std::vector<std::vector<double>> Resultant matrix after multiplication
+ */
 
 std::vector<std::vector<double>> utils :: matrixMultiplication(std::vector<std::vector<double>> matA, std::vector<std::vector<double>> matB){
 			int n1 = matA.size();
@@ -290,6 +325,14 @@ std::vector<std::vector<double>> utils :: matrixMultiplication(std::vector<std::
 	    }
 	return mat;
 }
+
+/**
+ * @brief Calculates the inverse of a square matrix using Gaussian elimination
+ * 
+ * @param mat 2D vector representing the input matrix
+ * @param n Size of the square matrix (number of rows or columns)
+ * @return std::vector<std::vector<double>> Inverse of the input matrix
+ */
 
 std::vector<std::vector<double>> utils :: inverseOfMatrix(std::vector<std::vector<double>> mat, int n){
     int index;
@@ -344,6 +387,16 @@ std::vector<std::vector<double>> utils :: inverseOfMatrix(std::vector<std::vecto
   return matinv;
 }
 
+/**
+ * @brief Calculates the coordinates of two beta centers given a hyperplane, beta value, circumradius, and circumcenter
+ * 
+ * @param hpcoff A vector containing the coefficients of the hyperplane
+ * @param beta A double representing the beta value
+ * @param circumRadius A double representing the circumradius
+ * @param circumCenter A vector containing the coordinates of the circumcenter
+ * @return std::vector<std::vector<double>> A vector containing the coordinates of the two beta centers
+ */
+
 std::vector<std::vector<double>> utils :: betaCentersCalculation(std::vector<double> hpcoff, double beta, double circumRadius,std::vector<double> circumCenter){
 	double distance = sqrt(pow((beta*circumRadius),2) - pow(circumRadius,2));
 	double d1 , d2;   // Parallel Plane coefficient
@@ -380,6 +433,15 @@ std::vector<std::vector<double>> utils :: betaCentersCalculation(std::vector<dou
 	centers.push_back(center2);
 	return centers;
 }
+
+/**
+ * @brief Computes Principal Component Analysis (PCA) for the given input data and reduces the dimensions to the target dimensions
+ * 
+ * @param input A 2D vector representing the input data, with rows as data points and columns as features
+ * @param targetDim An integer specifying the target number of dimensions after applying PCA
+ * @return std::pair<std::vector<std::vector<double>>,std::vector<std::vector<double>>> A pair containing the transformed data with reduced dimensions and the selected eigenvectors
+ */
+
 std::pair<std::vector<std::vector<double>>,std::vector<std::vector<double>>> utils:: computePCA(std::vector<std::vector<double>> input, int targetDim){
         std::vector<std::vector<double>> transp = transposeMeanAdjusted(input);
         Eigen::MatrixXd covar = covariance(transp);
@@ -405,6 +467,14 @@ std::pair<std::vector<std::vector<double>>,std::vector<std::vector<double>>> uti
 
 		
 }
+/**
+ * @brief Computes the PCA inverse of the input data.
+ * @param input Input data as a vector of vectors of doubles.
+ * @param FinalOutput Final output data as a vector of vectors of doubles.
+ * @param eigenvectors Eigenvectors as a vector of vectors of doubles.
+ * @return The PCA inverse result as a vector of vectors of doubles.
+ */
+
 std::vector<std::vector<double>> utils:: computePCAInverse(std::vector<std::vector<double>> input,std::vector<std::vector<double>> FinalOutput, std::vector<std::vector<double>> eigenvectors ){
 	    
 	    auto result = transpose(matrixMultiplication(transpose(eigenvectors),transpose(FinalOutput)));
@@ -421,6 +491,17 @@ std::vector<std::vector<double>> utils:: computePCAInverse(std::vector<std::vect
         return result;
 
 }
+
+/**
+ * @brief Computes the null space of a matrix.
+ * @param simplex A set of unsigned integers representing the simplex.
+ * @param inputData Input data as a vector of vectors of doubles.
+ * @param cc A vector of doubles containing cc values.
+ * @param radius A double value representing the radius.
+ * @param lowerdimension A boolean value to specify if the lower dimension should be computed.
+ * @return A pair containing the null space and the PCA output as vectors of doubles and vectors of vectors of doubles, respectively.
+ */
+
 std::pair<std::vector<double>,std::vector<std::vector<double>>> utils :: nullSpaceOfMatrix(std::set<unsigned> simplex,std::vector<std::vector<double>> inputData,std::vector<double> & cc, double radius,bool lowerdimension){
     int index;
     srand(time(NULL));
@@ -487,6 +568,14 @@ std::pair<std::vector<double>,std::vector<std::vector<double>>> utils :: nullSpa
 
   return std::make_pair(matns,outputPCA.second);
 }
+
+/**
+ * @brief Computes the circumcenter of the given simplex and input data.
+ * @param simplex A set of unsigned integers representing the simplex.
+ * @param inputData Input data as a vector of vectors of doubles.
+ * @return The circumcenter as a vector of doubles.
+ */
+
 std::vector<double> utils :: circumCenter(std::set<unsigned> simplex,std::vector<std::vector<double>> inputData){
 // Soluiton  = inv(matA) * matC
    std::vector<std::vector<double>>  matA(simplex.size());
@@ -537,6 +626,14 @@ std::vector<double> utils :: circumCenter(std::set<unsigned> simplex,std::vector
 		return circumCenter;
 
 }
+
+/**
+ * @brief Computes the circumradius of the given simplex and distance matrix.
+ * @param simplex A set of unsigned integers representing the simplex.
+ * @param distMatrix A pointer to the distance matrix as a vector of vectors of doubles.
+ * @return The circumradius as a double value.
+ */
+
 double utils :: circumRadius(std::set<unsigned> simplex,std::vector<std::vector<double>>* distMatrix){
     std::vector<std::vector<double>>  matA(simplex.size());
 		std::vector<std::vector<double>>  matACap(simplex.size()+1);
@@ -561,6 +658,15 @@ double utils :: circumRadius(std::set<unsigned> simplex,std::vector<std::vector<
 
 	return -(determinantOfMatrix(matA,simplex.size())/(2*determinantOfMatrix(matACap,simplex.size()+1)));
 }
+
+/**
+ * @brief Computes the volume of the simplex using the given distance matrix and dimension.
+ * @param simplex A set of unsigned integers representing the simplex.
+ * @param distMatrix A pointer to the distance matrix as a vector of vectors of doubles.
+ * @param dd An integer representing the dimension.
+ * @return The simplex volume as a double value.
+ */
+
 double utils :: simplexVolume(std::set<unsigned> simplex,std::vector<std::vector<double>>* distMatrix,int dd){
 		std::vector<std::vector<double>>  matACap(simplex.size()+1);
 		int ii=0;
@@ -584,6 +690,13 @@ double utils :: simplexVolume(std::set<unsigned> simplex,std::vector<std::vector
 	else
 		return (determinantOfMatrix(matACap,simplex.size()+1))/(pow(2,dd)*(pow(tgamma(dd+1),2)));
 }
+
+/**
+ * @brief Computes the volume of a simplex given a set of points.
+ * @param spoints Vector of vectors of doubles representing the simplex points.
+ * @return The volume of the simplex.
+ */
+
 double utils :: simplexVolume(std::vector<std::vector<double>> spoints){
 		std::vector<std::vector<double>>  matACap(spoints.size()+1);
 		int ii=0;
@@ -603,6 +716,12 @@ double utils :: simplexVolume(std::vector<std::vector<double>> spoints){
 		return (determinantOfMatrix(matACap,spoints.size()+1))/(pow(2,spoints[0].size())*(pow(tgamma(spoints[0].size()+1),2)));
 }
 
+/**
+ * @brief Computes the volume of a simplex given a set of points.
+ * @param spoints Vector of vectors of doubles representing the simplex points.
+ * @return The volume of the simplex.
+ */
+
 double utils::computeMaxRadius(int k, std::vector<std::vector<double>> &centroids, std::vector<std::vector<double>> &originalData, std::vector<unsigned> &labels){
 	double maxRadius = 0;
 	double curRadius = 0;
@@ -619,6 +738,15 @@ double utils::computeMaxRadius(int k, std::vector<std::vector<double>> &centroid
 	return maxRadius;
 }
 
+/**
+ * @brief Computes the average radius of a cluster.
+ * @param k Integer representing the number of clusters.
+ * @param centroids Vector of vectors of doubles representing the centroids.
+ * @param originalData Vector of vectors of doubles representing the original data points.
+ * @param labels Vector of unsigned integers representing the labels of the data points.
+ * @return The average radius of the cluster.
+ */
+
 double utils::computeAvgRadius(int k, std::vector<std::vector<double>> &centroids, std::vector<std::vector<double>> &originalData, std::vector<unsigned> &labels){
 	double totalRadius = 0;
 
@@ -631,6 +759,14 @@ double utils::computeAvgRadius(int k, std::vector<std::vector<double>> &centroid
 
 	return totalRadius / originalData.size();
 }
+
+/**
+ * @brief Computes the beta-neighbors of a given dataset.
+ * @param inData Vector of vectors of doubles representing the input data.
+ * @param beta Double representing the beta value.
+ * @param betaMode String representing the beta mode, either "lune" or "circle".
+ * @return A vector of vectors of booleans representing the beta-neighbor incidence matrix.
+ */
 
 std::vector<std::vector<bool>> utils :: betaNeighbors(std::vector<std::vector<double>>& inData,double beta,std::string betaMode){
 	std::vector<std::vector<bool>> incidenceMatrix(inData.size(),std::vector<bool>(inData.size(),0));
@@ -835,6 +971,18 @@ std::vector<std::vector<bool>> utils :: betaNeighbors(std::vector<std::vector<do
 
 
 
+/**
+
+	@brief Separates data points into their respective partitions given a vector of labels
+
+	@param k number of partitions
+
+	@param originalData vector of vectors of double, contains the data points
+
+	@param labels vector of unsigned int, contains the partition index for each point
+
+	@return a pair of two vectors of vectors, where the first vector is a vector of vectors of unsigned int, containing the indices of the points in each partition, and the second vector is a vector of vectors of vectors of double, containing the points in each partition
+*/
 
 std::pair<std::vector<std::vector<unsigned>>, std::vector<std::vector<std::vector<double>>>> utils::separatePartitions(int k, std::vector<std::vector<double>> originalData, std::vector<unsigned> labels){
 	std::vector<std::vector<double>> a;
@@ -849,6 +997,21 @@ std::pair<std::vector<std::vector<unsigned>>, std::vector<std::vector<std::vecto
 
 	return std::make_pair(labres, res);
 }
+
+/**
+
+	@brief Separates data points into their respective partitions based on their proximity to a set of centroids or their labels
+
+	@param rad cutoff radius
+
+	@param centroids vector of vectors of double, contains the centroid coordinates
+
+	@param originalData vector of vectors of double, contains the data points
+
+	@param labels vector of unsigned int, contains the partition index for each point
+
+	@return a pair of two vectors of vectors, where the first vector is a vector of vectors of unsigned int, containing the indices of the points in each partition, and the second vector is a vector of vectors of vectors of double, containing the points in each partition
+*/
 
 std::pair<std::vector<std::vector<unsigned>>, std::vector<std::vector<std::vector<double>>>> utils::separatePartitions(double rad, std::vector<std::vector<double>> centroids, std::vector<std::vector<double>> originalData, std::vector<unsigned> labels){
 	std::vector<std::vector<double>> a;
@@ -884,6 +1047,22 @@ std::pair<std::vector<std::vector<unsigned>>, std::vector<std::vector<std::vecto
 	return std::make_pair(labres, res);
 }
 
+/**
+
+	@brief Separates a list of data points into different partitions based on a given list of boundaries.
+
+	@details For each point in the input, the function checks to which boundaries it belongs to and stores it in the corresponding partition.
+
+	@param boundaryLists A list of sets, where each set contains the labels of points that belong to the corresponding partition.
+
+	@param originalData The input list of data points.
+
+	@param labels The labels of each input data point, used to identify which partition each data point belongs to.
+
+	@return A vector of partitions, where each partition is a vector of data points.
+*/
+
+
 std::vector<std::vector<std::vector<double>>> utils::separateBoundaryPartitions(std::vector<std::set<unsigned>> boundaryLists, std::vector<std::vector<double>> originalData, std::vector<unsigned> labels){
 	std::vector<std::vector<double>> a;
 	std::vector<std::vector<std::vector<double>>> res(boundaryLists.size(), a);
@@ -908,12 +1087,30 @@ std::vector<std::vector<std::vector<double>>> utils::separateBoundaryPartitions(
 // 	}
 // }
 
+/**
+
+	@brief Extracts the indices of data points that are located on the boundary of a simplicial complex.
+	@details This function takes as input a list of simplices representing the boundary of a simplicial complex and returns the set of indices of all data points located on this boundary.
+	@tparam T The type of simplex used to represent the boundary.
+	@param boundary A vector of simplices representing the boundary of a simplicial complex.
+	@return A set of indices of data points located on the boundary of the simplicial complex.
+*/
+
 template <typename T>
 std::set<unsigned> utils::extractBoundaryPoints(std::vector<std::shared_ptr<T>> boundary){
 	std::set<unsigned> boundaryPoints;
 	for(auto simplex : boundary) boundaryPoints.insert(simplex->simplex.begin(), simplex->simplex.end());
 	return boundaryPoints;
 }
+
+/**
+
+	@brief Extracts the indices of data points that are located on the boundary of a simplicial complex.
+	@details This function takes as input a list of simplices representing the boundary of a simplicial complex and returns the set of indices of all data points located on this boundary.
+	@tparam T The type of simplex used to represent the boundary.
+	@param boundary A vector of pointers to simplices representing the boundary of a simplicial complex.
+	@return A set of indices of data points located on the boundary of the simplicial complex.
+/
 
 template <typename T>
 std::set<unsigned> utils::extractBoundaryPoints(std::vector<T*> boundary){
