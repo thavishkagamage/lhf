@@ -19,12 +19,21 @@
 //#include "betaSkeletonBasedComplex.hpp"
 //#include "betaSubSkeletonComplex.hpp"
 #include "upscalePipe.hpp"
-//#include "qhullPipe.hpp"
+#include "qhullPipe.hpp"
 #include "slidingWindow.hpp"
-//#include "delaunayPipe.hpp"
+#include "delaunayPipe.hpp"
 
 template<typename nodeType>
 basePipe<nodeType>* basePipe<nodeType>::newPipe(const std::string &pipeType, const std::string &complexType){
+    /**
+	    newPipe(const std::string &pipeType, const std::string &complexType)
+	 
+		@brief Creates a new instance of the pipe class for management of dynamic pipeline segments. 
+		@tparam nodeType The data type of the simplex node.
+		@param pipeType The string name for the pipe type to create
+		@param complexType The string name for the desired complex type.
+        @return Pointer to the newly created Pipe class.
+	*/
 	utils ut;
 	ut.writeDebug("basePipe","Building pipeline: " + pipeType + " for " + complexType);
 
@@ -47,21 +56,26 @@ basePipe<nodeType>* basePipe<nodeType>::newPipe(const std::string &pipeType, con
 	//	return new betaSkeletonBasedComplex<nodeType>();
 	//} else if (pipeType == "betaSubSkeletonComplex"){
 	//	return new betaSubSkeletonComplex<nodeType>();
-	//}  else if (pipeType == "qhullPipe" || pipeType == "qhull" || pipeType == "alpha"){
-	//	return new qhullPipe<nodeType>();
+	}  else if (pipeType == "qhullPipe" || pipeType == "qhull" || pipeType == "alpha"){
+		return new qhullPipe<nodeType>();
 	} else if (pipeType == "slidingwindow" || pipeType == "sliding"){
 		return new slidingWindow<nodeType>();
-	//} else if (pipeType == "delaunayPipe"){
-	//	return new delaunayPipe<nodeType>();
+	} else if (pipeType == "delaunayPipe"){
+		return new delaunayPipe<nodeType>();
 	}
 
 	return 0;
 }
 
-// runPipeWrapper -> wrapper for timing of runPipe and other misc. functions
 template<typename nodeType>
 void basePipe<nodeType>::runPipeWrapper(pipePacket<nodeType> &inData){
-
+    /**
+	    runPipeWrapper(pipePacket<nodeType> &inData)
+	 
+		@brief Wrapper for executing the pipe segment. In debug mode the processing time and transient memory consumption is collected, alongside the specified output function for the pipeline. 
+		@tparam nodeType The data type of the simplex node.
+		@param inData The pipePacket data being used in the pipeline.
+	*/
 	//Check if the pipe has been configured
 	if(!configured){
 		ut.writeLog(pipeType,"Pipe not configured");
@@ -114,9 +128,15 @@ void basePipe<nodeType>::runPipeWrapper(pipePacket<nodeType> &inData){
 	return;
 }
 
-// outputData -> used for tracking each stage of the pipeline's data output without runtime
 template<typename nodeType>
 void basePipe<nodeType>::outputData(pipePacket<nodeType> &inData){
+    /**
+	    outputData(pipePacket<nodeType> &inData)
+	 
+		@brief Outputs data to a file if debug mode is true. Virtual function to be overridden by pipe definition.
+		@tparam nodeType The data type of the simplex node.
+		@param inData The pipePacket data being used in the pipeline.
+	*/
 	ut.writeDebug("basePipe","No output function defined for: " + pipeType);
 
 	std::ofstream file;
@@ -133,17 +153,30 @@ void basePipe<nodeType>::outputData(pipePacket<nodeType> &inData){
 	return;
 }
 
-// runPipe -> Run the configured functions of this pipeline segment
 template<typename nodeType>
 void basePipe<nodeType>::runPipe(pipePacket<nodeType> &inData){
+    /**
+	    runPipe(pipePacket<nodeType> &inData)
+	 
+		@brief Run the pipe function using parameters set in respective configPipe. Virtual function to be overridden by pipe definition.
+		@tparam nodeType The data type of the simplex node.
+		@param inData The pipePacket data being used in the pipeline.
+	*/
 	ut.writeError("basePipe","No run function defined for: " + pipeType);
 
 	return;
 }
 
-// configPipe -> configure the function settings of this pipeline segment
 template<typename nodeType>
 bool basePipe<nodeType>::configPipe(std::map<std::string, std::string> &configMap){
+	/**
+	    configPipe(std::map<std::string, std::string> &configMap)
+	 
+		@brief Configures the pipe and sets arguments based on the configMap passed. Called before execution (runPipe). If required values not found or configuration is invalid, returns false. Virtual function to be overridden by pipe definition.
+		@tparam nodeType The data type of the simplex node.
+		@param configMap The configuration map for this pipeline
+        @return boolean
+	*/
 	ut.writeDebug("basePipe","No configure function defined for: " + pipeType);
 
 	auto pipe = configMap.find("debug");

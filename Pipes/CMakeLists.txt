@@ -16,15 +16,12 @@ add_library(slidingWindow "slidingWindow.cpp" "slidingWindow.hpp")
 add_library(fastPersistence "fastPersistence.cpp" "fastPersistence.hpp")
 add_library(incrementalPersistence "incrementalPersistence.cpp" "incrementalPersistence.hpp")
 add_library(naiveWindow "naiveWindow.cpp" "naiveWindow.hpp")
-#add_library(qhullPipe "qhullPipe.cpp" "qhullPipe.hpp")
-#add_library(delaunayPipe "delaunayPipe.cpp" "delaunayPipe.hpp")
+add_library(qhullPipe "qhullPipe.cpp" "qhullPipe.hpp")
+add_library(delaunayPipe "delaunayPipe.cpp" "delaunayPipe.hpp")
 
 
 include_directories(${PROJECT_SOURCE_DIR}/Complex)
 link_directories(${PROJECT_SOURCE_DIR}/Complex)
-
-include_directories(${PROJECT_SOURCE_DIR}/Pipes)
-link_directories(${PROJECT_SOURCE_DIR}/Pipes)
 
 include_directories(${PROJECT_SOURCE_DIR}/Preprocessing)
 link_directories(${PROJECT_SOURCE_DIR}/Preprocessing)
@@ -51,12 +48,37 @@ else()
     FetchContent_MakeAvailable(qhullext)
 endif()
     
-    
 include_directories(${PROJECT_SOURCE_DIR}/_deps/qhullext-src/src/)
 link_directories(${PROJECT_SOURCE_DIR}/_deps/qhullext-build/)
 
+
+#Integrating with CGAL library
+FetchContent_Declare(cgalext
+    GIT_REPOSITORY "https://github.com/CGAL/cgal.git"
+    #BUILD_STATIC_LIBS OFF
+    #BUILD_SHARED_LIBS ON
+)
+
+if(${CMAKE_VERSION} VERSION_LESS 3.14)
+    FetchContent_GetProperties(cgalext)
+    if(NOT cgalext_POPULATED)
+        FetchContent_Populate(cgalext)
+        add_subdirectory(${cgalext_SOURCE_DIR} ${cgalext_BINARY_DIR})
+    endif()
+else()
+    FetchContent_MakeAvailable(cgalext)
+endif()
+
+set(CGAL_DIR ${cgalext_BINARY_DIR})
+
+find_package(CGAL REQUIRED)
+find_package(OpenMP)
+find_package(Eigen3)
+include_directories(${EIGEN3_INCLUDE_DIR})
+target_link_libraries(qhullPipe qhullcpp qhull_r)
+
 #target_link_libraries(basePipe utils simplexBase pipePacket distMatrixPipe neighGraphPipe incrementalPersistence fastPersistence ripsPipe naiveWindow betaSkeletonBasedComplex betaSubSkeletonComplex upscalePipe qhullcpp qhull_r qhullPipe slidingWindow)
-target_link_libraries(basePipe utils simplexBase pipePacket distMatrixPipe neighGraphPipe incrementalPersistence fastPersistence ripsPipe naiveWindow upscalePipe slidingWindow betaSkeletonBasedComplex betaSubSkeletonComplex)
+target_link_libraries(basePipe utils simplexBase pipePacket distMatrixPipe neighGraphPipe incrementalPersistence fastPersistence ripsPipe naiveWindow upscalePipe slidingWindow betaSkeletonBasedComplex betaSubSkeletonComplex delaunayPipe CGAL::CGAL OpenMP::OpenMP_CXX qhullPipe)
 
 INSTALL (TARGETS basePipe
 	LIBRARY DESTINATION lib
@@ -66,12 +88,3 @@ INSTALL (TARGETS basePipe
 
 MESSAGE (STATUS "CMAKE_INCLUDE_PATH: " ${CMAKE_INCLUDE_PATH})
 MESSAGE (STATUS "FLAGS: " ${CMAKE_CXX_FLAGS})
-
-
-#Integrating with CGAL library
-
-#find_package(CGAL)
-find_package(OpenMP)
-#target_link_libraries(delaunayPipe basePipe CGAL::CGAL OpenMP::OpenMP_CXX)
-find_package(Eigen3)
-include_directories(${EIGEN3_INCLUDE_DIR})
